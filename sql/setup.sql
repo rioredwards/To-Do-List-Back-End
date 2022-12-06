@@ -17,15 +17,3 @@ CREATE TABLE todos (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
-INSERT INTO
-  users (email, password_hash)
-VALUES
-  ('pig@pig.com', 'notarealpasswordhash');
-
-INSERT INTO
-  todos (user_id, description)
-VALUES
-  (1, 'Eat Ice Cream!'),
-  (1, 'Chill out'),
-  (1, 'Write some code');
