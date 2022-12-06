@@ -74,8 +74,8 @@ describe('todo routes', () => {
   it('GET /api/v1/items/:id should update an item', async () => {
     // create a user
     const [agent, user] = await registerAndLogin();
-    const response = await ToDo.insert({ ...mockTodo, user_id: user.id });
-    const resp = await agent.get(`/api/v1/todos/${response.id}`);
+    const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
+    const resp = await agent.get(`/api/v1/todos/${todo.id}`);
     expect(resp.status).toEqual(200);
     expect(resp.body).toEqual({
       id: expect.any(String),
@@ -99,18 +99,19 @@ describe('todo routes', () => {
     });
   });
 
-  /* it('UPDATE /api/v1/todos/:id should update an todo', async () => {
+  it('UPDATE /api/v1/todos/:id should update an todo', async () => {
     // create a user
     const [agent, user] = await registerAndLogin();
-    const todo = await ToDo.insert({
-      description: 'apples',
-      complete: false,
-      user_id: user.id,
-    });
-    const resp = await agent
-      .put(`/api/v1/todos/${todo.id}`)
-      .send({ complete: true });
+    const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
+    const updateTodo = { ...todo, description: 'oranges', complete: true };
+    const resp = await agent.put(`/api/v1/todos/${todo.id}`).send(updateTodo);
     expect(resp.status).toBe(200);
-    expect(resp.body).toEqual({ ...todo, complete: true });
-  }); */
+    expect(resp.body).toEqual({
+      id: updateTodo.id,
+      description: updateTodo.description,
+      user_id: updateTodo.id,
+      complete: updateTodo.complete,
+      created_at: expect.any(String),
+    });
+  });
 });
