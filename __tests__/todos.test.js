@@ -16,6 +16,14 @@ const mockUser2 = {
   password: '123456',
 };
 
+const mockTodo = {
+  description: 'Go on a walk',
+};
+
+const mockTodo2 = {
+  description: 'Swim in a pool',
+};
+
 const registerAndLogin = async (userProps = {}) => {
   const password = userProps.password ?? mockUser.password;
 
@@ -45,14 +53,8 @@ describe('todo routes', () => {
     const [agent, user] = await registerAndLogin();
     // add a second user with todos
     const user2 = await UserService.create(mockUser2);
-    await ToDo.insert({
-      description: 'Go on a walk',
-      user_id: user.id,
-    });
-    await ToDo.insert({
-      description: 'Swim in a pool',
-      user_id: user2.id,
-    });
+    await ToDo.insert({ ...mockTodo, user_id: user.id });
+    await ToDo.insert({ ...mockTodo2, user_id: user2.id });
     const resp = await agent.get('/api/v1/todos');
     expect(resp.status).toEqual(200);
     resp.body[0].created_at = null;
@@ -70,5 +72,18 @@ describe('todo routes', () => {
   it('GET /api/v1/todos should return a 401 if not authenticated', async () => {
     const resp = await request(app).get('/api/v1/todos');
     expect(resp.status).toEqual(401);
+  });
+
+  it('POST /api/v1/todos creates a new todo with the current user', async () => {
+    const [agent, user] = await registerAndLogin();
+    const resp = await agent.post('/api/v1/todos').send(mockTodo);
+    expect(resp.status).toEqual(200);
+    expect(resp.body).toEqual({
+      id: expect.any(String),
+      description: mockTodo.description,
+      user_id: user.id,
+      complete: false,
+      created_at: expect.any(String),
+    });
   });
 });
