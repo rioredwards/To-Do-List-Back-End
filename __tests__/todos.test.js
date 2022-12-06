@@ -57,21 +57,33 @@ describe('todo routes', () => {
     await ToDo.insert({ ...mockTodo2, user_id: user2.id });
     const resp = await agent.get('/api/v1/todos');
     expect(resp.status).toEqual(200);
-    resp.body[0].created_at = null;
-    expect(resp.body[0]).toMatchInlineSnapshot(`
-      Object {
-        "complete": false,
-        "created_at": null,
-        "description": "Go on a walk",
-        "id": "1",
-        "user_id": "1",
-      }
-    `);
+    expect(resp.body[0]).toEqual({
+      id: expect.any(String),
+      description: mockTodo.description,
+      user_id: user.id,
+      complete: false,
+      created_at: expect.any(String),
+    });
   });
 
   it('GET /api/v1/todos should return a 401 if not authenticated', async () => {
     const resp = await request(app).get('/api/v1/todos');
     expect(resp.status).toEqual(401);
+  });
+
+  it('GET /api/v1/items/:id should update an item', async () => {
+    // create a user
+    const [agent, user] = await registerAndLogin();
+    const response = await ToDo.insert({ ...mockTodo, user_id: user.id });
+    const resp = await agent.get(`/api/v1/todos/${response.id}`);
+    expect(resp.status).toEqual(200);
+    expect(resp.body).toEqual({
+      id: expect.any(String),
+      description: mockTodo.description,
+      user_id: user.id,
+      complete: false,
+      created_at: expect.any(String),
+    });
   });
 
   it('POST /api/v1/todos creates a new todo with the current user', async () => {
@@ -86,4 +98,19 @@ describe('todo routes', () => {
       created_at: expect.any(String),
     });
   });
+
+  /* it('UPDATE /api/v1/todos/:id should update an todo', async () => {
+    // create a user
+    const [agent, user] = await registerAndLogin();
+    const todo = await ToDo.insert({
+      description: 'apples',
+      complete: false,
+      user_id: user.id,
+    });
+    const resp = await agent
+      .put(`/api/v1/todos/${todo.id}`)
+      .send({ complete: true });
+    expect(resp.status).toBe(200);
+    expect(resp.body).toEqual({ ...todo, complete: true });
+  }); */
 });
