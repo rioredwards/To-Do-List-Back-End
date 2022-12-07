@@ -114,4 +114,14 @@ describe('todo routes', () => {
       created_at: expect.any(String),
     });
   });
+
+  it('DELETE /api/v1/todos/:id should delete a todo for valid user', async () => {
+    const [agent, user] = await registerAndLogin();
+    const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
+    const resp = await agent.delete(`/api/v1/todos/${todo.id}`);
+    expect(resp.status).toBe(200);
+
+    const check = await ToDo.getById(todo.id);
+    expect(check).toBeNull();
+  });
 });
