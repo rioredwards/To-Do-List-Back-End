@@ -71,7 +71,7 @@ describe('todo routes', () => {
     expect(resp.status).toEqual(401);
   });
 
-  it('GET /api/v1/items/:id should update an item', async () => {
+  it('GET /api/v1/items/:id should get a single todo', async () => {
     // create a user
     const [agent, user] = await registerAndLogin();
     const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
@@ -115,6 +115,23 @@ describe('todo routes', () => {
     });
   });
 
+  it('UPDATE /api/v1/todos/:id should return a 403 if not authorized', async () => {
+    // create a user
+    const [user] = await registerAndLogin();
+    // create a todo with user_id of current user
+    const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
+    // create and login as a new user
+    const [agent] = await registerAndLogin(mockUser2);
+    // create an updated version of the todo as the new user
+    const updateTodo = { ...todo, description: 'oranges', complete: true };
+    // send the updated version to the api
+    const resp = await agent.put(`/api/v1/todos/${todo.id}`).send(updateTodo);
+    expect(resp.status).toBe(403);
+    expect(resp.body.message).toEqual(
+      'You are not authorized to access this item!'
+    );
+  });
+
   it('DELETE /api/v1/todos/:id should delete a todo for valid user', async () => {
     const [agent, user] = await registerAndLogin();
     const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
@@ -123,5 +140,20 @@ describe('todo routes', () => {
 
     const check = await ToDo.getById(todo.id);
     expect(check).toBeNull();
+  });
+
+  it('DELETE /api/v1/todos/:id should return a 403 if not authorized', async () => {
+    // create a user
+    const [user] = await registerAndLogin();
+    // create a todo with user_id of current user
+    const todo = await ToDo.insert({ ...mockTodo, user_id: user.id });
+    // create and login as a new user
+    const [agent] = await registerAndLogin(mockUser2);
+    // send a delete request to the api
+    const resp = await agent.delete(`/api/v1/todos/${todo.id}`);
+    expect(resp.status).toBe(403);
+    expect(resp.body.message).toEqual(
+      'You are not authorized to access this item!'
+    );
   });
 });
